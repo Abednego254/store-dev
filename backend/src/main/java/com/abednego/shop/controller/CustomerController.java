@@ -71,7 +71,7 @@ public class CustomerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         log.info("DELETE /api/customers/{}", id);
-        log.info("Getting customer by id ...");
+        log.info("Deletting customer by id ...");
         return customerService.delete(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
