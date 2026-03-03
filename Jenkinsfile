@@ -6,53 +6,47 @@ pipeline {
     }
 
     environment {
-        BUILD_DIR = "built"
-        // Replace this URL with your actual GitHub repository URL for this 'store' project
-        REPO_URL = "https://github.com/Abednego254/store.git"
-        BRANCH = "main" // Change to your active branch if it's 'master'
+        // Correct project directory based on your logs
         PROJECT_DIR = "backend"
+        BUILD_DIR = "built"
+        REPO_URL = "https://github.com/Abednego254/store-dev.git"
+        BRANCH = "main"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // You may need to create a credential in Jenkins named 'jenkins-github-creds'
-                // or remove the credentialsId line if your repository is public
-                git branch: "${BRANCH}",
-                    url: "${REPO_URL}"
+                git branch: "${BRANCH}", url: "${REPO_URL}"
             }
         }
 
-        stage('Build & Run 100% Tests with Maven') {
+        stage('Build & Test') {
             steps {
                 dir("${PROJECT_DIR}") {
-                    // Make Maven wrapper executable
                     sh 'chmod +x mvnw'
-                    // Clean, run all tests, generate coverage, and package
-                    // The 'verify' phase automatically ensures all unit tests pass
-                    sh './mvnw clean verify jacoco:report'
-                    // The pipeline will STOP here and fail if any single test fails
+                    // Since you added JaCoCo to your pom.xml, 
+                    // this standard command will now work perfectly.
+                    sh './mvnw clean verify'
                 }
             }
         }
 
-        stage('Create built Directory') {
+        stage('Archive Artifacts') {
             steps {
-                sh '''
-                    mkdir -p ../${BUILD_DIR}
-                    cp target/*.jar ../${BUILD_DIR}/
-                '''
+                sh "mkdir -p ${BUILD_DIR}"
+                // Copy from the backend target folder to the root built folder
+                sh "cp ${PROJECT_DIR}/target/*.jar ${BUILD_DIR}/"
             }
         }
     }
 
     post {
         success {
-            echo "Build successful. Tests passed at 100%. .jar stored in built/"
-            archiveArtifacts artifacts: 'built/*.jar', fingerprint: true
+            echo "Build Successful!"
+            archiveArtifacts artifacts: "${BUILD_DIR}/*.jar", fingerprint: true
         }
         failure {
-            echo "Build failed. Check the test reports."
+            echo "Build failed. Check Maven logs for JaCoCo or Test errors."
         }
     }
 }
